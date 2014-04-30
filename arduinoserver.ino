@@ -2,8 +2,9 @@
 // 2011-01-30 <jc@wippler.nl> http://opensource.org/licenses/mit-license.php
  
 #include <EtherCard.h>
-
-#define STATIC 1  // set to 1 to disable DHCP (adjust myip/gwip values below)
+int shootpin = 9;
+int loadpin = 7;
+#define STATIC 1   // set to 1 to disable DHCP (adjust myip/gwip values below)
 
 #if STATIC
 // ethernet interface ip address
@@ -16,7 +17,7 @@ static byte gwip[] = { 192,168,1,1 };
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
 
 byte Ethernet::buffer[500]; // tcp/ip send and receive buffer
-int ledPin2 = 9;
+
 char page[] PROGMEM =
 "HTTP/1.0 200 OK\r\n"
 "Content-Type: text/html\r\n"
@@ -34,9 +35,10 @@ char page[] PROGMEM =
 
 void setup(){
   Serial.begin(9600);
+  pinMode(shootpin,OUTPUT);
+  pinMode(loadpin,OUTPUT);
   Serial.println("\n[backSoon]");
-  pinMode(ledPin2,OUTPUT);
-  digitalWrite(ledPin2,LOW);
+  
   if (ether.begin(sizeof Ethernet::buffer, mymac) == 0) 
     Serial.println( "Failed to access Ethernet controller");
 #if STATIC
@@ -52,7 +54,11 @@ void setup(){
 }
 
 void loop(){
-   word len = ether.packetReceive();
+  digitalWrite(loadpin,HIGH);
+  delay(15000);
+  digitalWrite(loadpin,LOW);
+  while(true) {
+       word len = ether.packetReceive();
   word pos = ether.packetLoop(len);
   // wait for an incoming TCP packet, but ignore its contents
   if (ether.packetLoop(ether.packetReceive())) {
@@ -60,10 +66,10 @@ void loop(){
     ether.httpServerReply(sizeof page - 1);
   }
   if(strstr((char *)Ethernet::buffer + pos, "GET /?led=on") != 0) {
-      Serial.println("Received ON command");
-      digitalWrite(ledPin2, HIGH);
-      delay(1000);
-      digitalWrite(ledPin2,LOW);
-      
+      digitalWrite(shootpin, HIGH);
+      delay(500);
+      digitalWrite(shootpin,LOW);
+      break;
   }
+}
 }
