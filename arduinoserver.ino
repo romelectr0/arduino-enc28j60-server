@@ -54,8 +54,17 @@ void setup(){
 }
 
 void loop(){
+if (true) {
+word len = ether.packetReceive();
+  word pos = ether.packetLoop(len);
+  // wait for an incoming TCP packet, but ignore its contents
+  if (ether.packetLoop(ether.packetReceive())) {
+    memcpy_P(ether.tcpOffset(), page, sizeof page);
+    ether.httpServerReply(sizeof page - 1);
+  }
+}
   digitalWrite(loadpin,HIGH);
-  delay(15000);
+  delay(10000);
   digitalWrite(loadpin,LOW);
   while(true) {
        word len = ether.packetReceive();
